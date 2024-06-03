@@ -97,6 +97,9 @@ class _UsersState extends State<Users> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Users'),
+      ),
       body: Column(
         children: [
           Padding(
@@ -196,44 +199,90 @@ class _UsersState extends State<Users> {
                   );
                 }
 
-                return DataTable(
-                  columns: [
-                    DataColumn(label: Text('Photo')),
-                    DataColumn(label: Text('Name')),
-                    DataColumn(label: Text('Send Lunch')),
-                    DataColumn(label: Text('Send Dinner')),
-                  ],
-                  rows: filteredDocs.map((DocumentSnapshot document) {
-                    Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
-                    String profileImageUrl = data['profileImageUrl'] ?? 'lib/common/images/profile.png'; // Default image if profile image is not available
-                    String fullName = '${data['nume']} ${data['prenume']}';
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 600) {
+                      // Compact view for small screens
+                      return ListView(
+                        children: filteredDocs.map((DocumentSnapshot document) {
+                          Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+                          String profileImageUrl = data['profileImageUrl'] ?? 'lib/common/images/profile.png';
+                          String fullName = '${data['nume']} ${data['prenume']}';
 
-                    return DataRow(cells: [
-                      DataCell(
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage: NetworkImage(profileImageUrl),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(profileImageUrl),
+                              ),
+                              title: Text(fullName),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      _handleSendLunch(document.id);
+                                    },
+                                    child: Text('Send Lunch'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      _handleSendDinner(document.id);
+                                    },
+                                    child: Text('Send Dinner'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    } else {
+                      // DataTable view for larger screens
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: [
+                            DataColumn(label: Text('Photo')),
+                            DataColumn(label: Text('Name')),
+                            DataColumn(label: Text('Send Lunch')),
+                            DataColumn(label: Text('Send Dinner')),
+                          ],
+                          rows: filteredDocs.map((DocumentSnapshot document) {
+                            Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+                            String profileImageUrl = data['profileImageUrl'] ?? 'lib/common/images/profile.png';
+                            String fullName = '${data['nume']} ${data['prenume']}';
+
+                            return DataRow(cells: [
+                              DataCell(
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: NetworkImage(profileImageUrl),
+                                ),
+                              ),
+                              DataCell(Text(fullName)),
+                              DataCell(
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _handleSendLunch(document.id);
+                                  },
+                                  child: Text('Send Lunch'),
+                                ),
+                              ),
+                              DataCell(
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _handleSendDinner(document.id);
+                                  },
+                                  child: Text('Send Dinner'),
+                                ),
+                              ),
+                            ]);
+                          }).toList(),
                         ),
-                      ),
-                      DataCell(Text(fullName)),
-                      DataCell(
-                        ElevatedButton(
-                          onPressed: () {
-                            _handleSendLunch(document.id);
-                          },
-                          child: Text('Send Lunch'),
-                        ),
-                      ),
-                      DataCell(
-                        ElevatedButton(
-                          onPressed: () {
-                            _handleSendDinner(document.id);
-                          },
-                          child: Text('Send Dinner'),
-                        ),
-                      ),
-                    ]);
-                  }).toList(),
+                      );
+                    }
+                  },
                 );
               },
             ),

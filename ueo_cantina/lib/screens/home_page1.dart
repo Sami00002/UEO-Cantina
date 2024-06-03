@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ueo_cantina/screens/login_page.dart';
 import 'package:ueo_cantina/responsive.dart';
-import 'package:ueo_cantina/components/side_menu.dart';
+import 'package:ueo_cantina/components/side_menu2.dart';
 import 'package:ueo_cantina/components/table.dart'; 
 import 'package:ueo_cantina/components/qr_scannar.dart'; 
 
