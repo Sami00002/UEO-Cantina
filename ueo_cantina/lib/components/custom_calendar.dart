@@ -347,10 +347,34 @@ class _CustomCalendarState extends State<CustomCalendar> {
             children: [
               _buildMonthYearPicker(),
               const SizedBox(height: 16),
+              const Text(
+                "Zilele în care studentul/ă a plătit masa:",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
+              ),
+              const SizedBox(height: 16),
               ..._buildCalendar(),
+              const SizedBox(height: 16),
               _buildLegend(),
+              const Divider(
+                color: Colors.black,
+                thickness: 2,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Mese active:",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
+              ),
               const SizedBox(height: 16),
               ..._buildCalendar(isSummary: true),
+              const SizedBox(height: 16),
             ],
           ),
         ),
