@@ -13,7 +13,7 @@ class CustomCalendar extends StatefulWidget {
 class _CustomCalendarState extends State<CustomCalendar> {
   DateTime _selectedDate = DateTime.now();
   final Map<DateTime, List<int>> _checkedStates = {};
-  final Map<DateTime, List<int>> _fetchedStates = {}; // New map for fetched states
+  final Map<DateTime, List<int>> _fetchedStates = {};
   int _selectedYear = DateTime.now().year;
   int _selectedMonth = DateTime.now().month;
 
@@ -54,8 +54,46 @@ class _CustomCalendarState extends State<CustomCalendar> {
         .showSnackBar(const SnackBar(content: Text('Selections saved!')));
   }
 
-  Future<void> _fetchSelectedDays() async {
+  Future<void> _saveSelectedDays2() async {
     final collectionRef = FirebaseFirestore.instance
+        .collection('bonuriDeMasa')
+        .doc(widget.userId)
+        .collection('selectedDays');
+
+    _checkedStates.forEach((date, isSelected) async {
+      await collectionRef.doc(date.toIso8601String()).set({
+        'date': date,
+        'lunch': isSelected[0],
+        'dinner': isSelected[1],
+      });
+    });
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Selections saved!')));
+  }
+
+  Future<void> _fetchSelectedDays() async {
+    final bonuriDeMasaCollectionRef = FirebaseFirestore.instance
+        .collection('bonuriDeMasa')
+        .doc(widget.userId)
+        .collection('selectedDays')
+        .where('date',
+            isGreaterThanOrEqualTo: DateTime(_selectedYear, _selectedMonth))
+        .where('date', isLessThan: DateTime(_selectedYear, _selectedMonth + 1));
+
+    var bonuriDeMasaQuerySnapshot = await bonuriDeMasaCollectionRef.get();
+
+    for (var doc in bonuriDeMasaQuerySnapshot.docs) {
+      var data = doc.data();
+      DateTime date = (data['date'] as Timestamp).toDate();
+      int lunch = data['lunch'] ?? 0;
+      int dinner = data['dinner'] ?? 0;
+      setState(() {
+        _checkedStates[date] = [lunch, dinner];
+      });
+    }
+
+    final usersCollectionRef = FirebaseFirestore.instance
         .collection('users')
         .doc(widget.userId)
         .collection('selectedDays')
@@ -63,15 +101,15 @@ class _CustomCalendarState extends State<CustomCalendar> {
             isGreaterThanOrEqualTo: DateTime(_selectedYear, _selectedMonth))
         .where('date', isLessThan: DateTime(_selectedYear, _selectedMonth + 1));
 
-    var querySnapshot = await collectionRef.get();
+    var usersQuerySnapshot = await usersCollectionRef.get();
 
-    for (var doc in querySnapshot.docs) {
+    for (var doc in usersQuerySnapshot.docs) {
       var data = doc.data();
       DateTime date = (data['date'] as Timestamp).toDate();
       int lunch = data['lunch'] ?? 0;
       int dinner = data['dinner'] ?? 0;
       setState(() {
-        _fetchedStates[date] = [lunch, dinner]; // Store fetched values in the new map
+        _fetchedStates[date] = [lunch, dinner];
       });
     }
   }
@@ -122,38 +160,49 @@ class _CustomCalendarState extends State<CustomCalendar> {
     bool isWeekday =
         date.weekday != DateTime.saturday && date.weekday != DateTime.sunday;
 
-    return Column(
-      children: [
-        Text("${date.day}"),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Checkbox(
-              value: isWeekday && checks[0] == 1,
-              onChanged: isWeekday
-                  ? (value) =>
-                      setState(() => _checkedStates[date]![0] = value! ? 1 : 0)
-                  : null,
-              checkColor: Colors.white,
-              activeColor: Colors.green,
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.all(4.0),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Text(
+              "${date.day}",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isWeekday ? Colors.black : Colors.grey,
+              ),
             ),
-            Checkbox(
-              value: isWeekday && checks[1] == 1,
-              onChanged: isWeekday
-                  ? (value) =>
-                      setState(() => _checkedStates[date]![1] = value! ? 1 : 0)
-                  : null,
-              checkColor: Colors.white,
-              activeColor: Colors.red,
-            ),
-          ],
-        ),
-      ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Checkbox(
+                value: isWeekday && checks[0] == 1,
+                onChanged: isWeekday
+                    ? (value) => setState(() => _checkedStates[date]![0] = value! ? 1 : 0)
+                    : null,
+                checkColor: Colors.white,
+                activeColor: Colors.green,
+              ),
+              Checkbox(
+                value: isWeekday && checks[1] == 1,
+                onChanged: isWeekday
+                    ? (value) => setState(() => _checkedStates[date]![1] = value! ? 1 : 0)
+                    : null,
+                checkColor: Colors.white,
+                activeColor: Colors.red,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _daySummaryWidget(DateTime date) {
-    List<int>? checks = _fetchedStates[date]; // Use fetched states instead of checked states
+    List<int>? checks = _fetchedStates[date];
     if (checks == null) return Container();
 
     return Card(
@@ -207,7 +256,7 @@ class _CustomCalendarState extends State<CustomCalendar> {
     int totalDays =
         DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
     for (int i = 1; i <= totalDays; i++) {
-      DateTime date = DateTime(_selectedDate.year, _selectedDate .month, i);
+      DateTime date = DateTime(_selectedDate.year, _selectedDate.month, i);
       week.add(Expanded(
         child: isSummary ? _daySummaryWidget(date) : _dayWidget(date),
       ));
@@ -228,7 +277,6 @@ class _CustomCalendarState extends State<CustomCalendar> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Lunch Checkbox Legend
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -239,7 +287,6 @@ class _CustomCalendarState extends State<CustomCalendar> {
                     _checkedStates.forEach((date, isSelected) {
                       if (date.weekday != DateTime.saturday &&
                           date.weekday != DateTime.sunday) {
-                        // Check if it's a weekday
                         _checkedStates[date]![0] = value! ? 1 : 0;
                       }
                     });
@@ -251,9 +298,7 @@ class _CustomCalendarState extends State<CustomCalendar> {
               const Text('Lunch'),
             ],
           ),
-          const SizedBox(width: 24), // Spacing between items
-
-          // Dinner Checkbox Legend
+          const SizedBox(width: 24),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -264,7 +309,6 @@ class _CustomCalendarState extends State<CustomCalendar> {
                     _checkedStates.forEach((date, isSelected) {
                       if (date.weekday != DateTime.saturday &&
                           date.weekday != DateTime.sunday) {
-                        // Check if it's a weekday
                         _checkedStates[date]![1] = value! ? 1 : 0;
                       }
                     });
@@ -289,20 +333,26 @@ class _CustomCalendarState extends State<CustomCalendar> {
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _saveSelectedDays,
+            onPressed: () {
+              _saveSelectedDays();
+              _saveSelectedDays2();
+            },
           ),
         ],
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildMonthYearPicker(),
-            ..._buildCalendar(),
-            _buildLegend(),
-            const SizedBox(height: 16), // Add spacing between tables
-            _buildMonthYearPicker(), // Duplicate month-year picker here
-            ..._buildCalendar(isSummary: true), // Duplicate calendar here for summary
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildMonthYearPicker(),
+              const SizedBox(height: 16),
+              ..._buildCalendar(),
+              _buildLegend(),
+              const SizedBox(height: 16),
+              ..._buildCalendar(isSummary: true),
+            ],
+          ),
         ),
       ),
     );
