@@ -5,6 +5,7 @@ import 'package:ueo_cantina/components/my_button.dart';
 import 'package:ueo_cantina/components/my_textfield.dart';
 import 'package:ueo_cantina/screens/home_page1.dart';
 import 'package:ueo_cantina/screens/home_page2.dart';
+import 'package:ueo_cantina/components/ResetPasswordScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key});
@@ -35,8 +36,8 @@ class _LoginScreenState extends State<LoginScreen> {
       // If authentication is successful, navigate to HomePage1
       Navigator.pop(context); // Dismiss the loading circle
       if (emailController.text == "test@gmail.com") {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => const HomePage1()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const HomePage1()));
       } else {
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => const HomePage2()));
@@ -144,14 +145,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Forgot password?
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ResetPasswordScreen()),
+                      );
+                    },
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
                   ),
                 ),
 

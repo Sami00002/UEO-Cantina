@@ -80,7 +80,6 @@ class _UsersState extends State<Users> {
     }
 
     var senderData = senderSnapshot.docs.first.data() as Map<String, dynamic>;
-    var recipientData = recipientSnapshot.docs.first.data() as Map<String, dynamic>;
 
     if (senderData[mealType] >= 1) {
       await senderCollection.doc(senderSnapshot.docs.first.id).update({
