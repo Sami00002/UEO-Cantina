@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:ueo_cantina/components/ThemeNotifier.dart';
+import 'package:ueo_cantina/components/ChangePasswordScreen.dart';
 
 class RootApp extends StatefulWidget {
   const RootApp({Key? key}) : super(key: key);
@@ -75,8 +78,18 @@ class _RootAppState extends State<RootApp> {
     }
   }
 
-  @override
+  // Function to navigate to the Change Password screen
+  void _navigateToChangePasswordScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+    );
+  }
+
+   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -126,13 +139,6 @@ class _RootAppState extends State<RootApp> {
                   title: Text('Change Profile Image'),
                   onTap: () => _changeProfileImage(),
                 ),
-                ListTile(
-                  leading: Icon(Icons.person),
-                  title: Text('Change Name'),
-                  onTap: () {
-                    // Navigate to Change Name screen
-                  },
-                ),
               ],
             ),
           ),
@@ -147,15 +153,16 @@ class _RootAppState extends State<RootApp> {
                   title: Text('Change Password'),
                   onTap: () {
                     // Navigate to Change Password screen
+                    _navigateToChangePasswordScreen(context);
                   },
                 ),
                 ListTile(
                   leading: Icon(Icons.nightlight_round),
                   title: Text('Dark Mode'),
                   trailing: Switch(
-                    value: false, // Replace with actual value for dark mode
+                    value: themeNotifier.isDarkTheme,
                     onChanged: (value) {
-                      // Toggle dark mode
+                      themeNotifier.toggleTheme();
                     },
                   ),
                 ),
